@@ -1,36 +1,24 @@
 "use client"
 
 import { Bell, MoreVertical, Plus } from "lucide-react"
-import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { CheckInDialog } from "./check-in-dialog"
-import Webcam from "react-webcam";
 import { CameraInterface } from "./camera"
 import { useCheckInDialogStore } from "./check-in-dialog-root"
-
+import { UserButton } from "@clerk/nextjs"
 
 export default function Timeline() {
   const { state, open, close } = useCheckInDialogStore()
   return (
+    <>
     <div className="bg-black min-h-screen text-white">
 
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-2">
-            <Button variant="ghost" size="icon">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
-                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-              </svg>
-            </Button>
-        <Dialog open={state !== null} onOpenChange={() => close()}>
-          <DialogContent className="min-h-dvh min-w-dvw p-0 m-0 max-w-[100dvw] border-none">
-            {state === "taking-photo" && <CameraInterface />}
-            {state === "confirming" && <CheckInDialog />}
-          </DialogContent>
-        </Dialog>
+        <UserButton />
         <div className="flex items-center gap-4">
           <Bell className="w-6 h-6" />
           <MoreVertical className="w-6 h-6" />
@@ -139,6 +127,14 @@ export default function Timeline() {
         </div>
       </div>
     </div>
+
+    <Dialog open={state !== null} onOpenChange={() => close()}>
+          <DialogContent className="min-h-dvh min-w-dvw p-0 m-0 max-w-[100dvw] border-none">
+            {state === "taking-photo" && <CameraInterface />}
+            {state === "confirming" && <CheckInDialog />}
+          </DialogContent>
+        </Dialog>
+    </>
   )
 }
 
