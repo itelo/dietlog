@@ -8,16 +8,44 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckInDialog } from "@/app/check-in-dialog";
 import { CameraInterface } from "@/app/camera";
 import { useCheckInDialogStore } from "@/app/check-in-dialog-root";
-import { UserButton } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
+import {
+  checkInConverter,
+  firebaseDb,
+  useUserCheckInsSubscription,
+} from "@/lib/firebase";
+import { doc } from "firebase/firestore";
+import { Fragment, useMemo } from "react";
+import * as D from "date-fns";
+import * as R from "remeda";
 
 export default function Timeline() {
   const { state, open, close } = useCheckInDialogStore();
+  const { userId } = useAuth();
+
+  const checkInsQuery = useUserCheckInsSubscription({
+    userId,
+  });
+
+  const groups = R.pipe(
+    checkInsQuery.data ?? [],
+    R.map((d) => R.addProp(d, "timestamp_date", new Date())),
+    R.sortBy([R.prop("timestamp_date"), "desc"]),
+    R.groupBy((d) => D.format(d.timestamp, "yyyy-MM-dd")),
+  );
+
   return (
     <>
       <div className="min-h-screen bg-black text-white">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2">
-          <UserButton />
+          <UserButton appearance={{
+            elements: {
+              // button: "size-12",
+              // userButtonBox: "size-12",
+              avatarBox: "size-10",
+            }
+          }} />
           <div className="flex items-center gap-4">
             <Bell className="h-6 w-6" />
             <MoreVertical className="h-6 w-6" />
@@ -25,80 +53,44 @@ export default function Timeline() {
         </div>
 
         {/* Content */}
-        <div className="space-y-6 px-4 py-2">
-          <div className="text-sm text-gray-500">Today</div>
-
-          <Card className="border-none bg-zinc-900">
-            <div className="flex items-center gap-3 p-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage
-                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2501.PNG-8T9LUfrP9ZQahOtZeCUZYcrDm9q1Ch.png"}`}
-                  alt="Spinning class"
-                />
-                <AvatarFallback>SP</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="font-medium">Spinning</h3>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback>AI</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-400">Ana Julia</span>
-                </div>
+        <div className="space-y-4 px-4 py-2">
+          {Object.entries(groups).map(([date, checkIns]) => (
+            <Fragment key={date}>
+              <div className="text-sm text-gray-500">
+                {D.format(
+                  D.parse(date, "yyyy-MM-dd", new Date()),
+                  "EEEE, MMMM d",
+                )}
               </div>
-              <span className="text-sm text-gray-500">9:06 am</span>
-            </div>
-          </Card>
-
-          <Card className="border-none bg-zinc-900">
-            <div className="flex items-center gap-3 p-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage
-                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2501.PNG-8T9LUfrP9ZQahOtZeCUZYcrDm9q1Ch.png"}`}
-                  alt="Academia"
-                />
-                <AvatarFallback>AC</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="font-medium">Academia</h3>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback>IT</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-400">Itelo</span>
-                </div>
+              <div className="w-full flex flex-col gap-2">
+              {checkIns.map((c) => (
+                <Card className="border-none bg-zinc-900" key={c.id}>
+                  <div className="flex items-center gap-3 p-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? c.imageSrc}`}
+                        alt="Spinning class"
+                      />
+                      <AvatarFallback>SP</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h3 className="font-medium">Spinning</h3>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback>AI</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-gray-400">Ana Julia</span>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      {D.format(c.timestamp, "HH:mm")}
+                    </span>
+                  </div>
+                </Card>
+              ))}
               </div>
-              <span className="text-sm text-gray-500">8:52 am</span>
-            </div>
-          </Card>
-
-          <div className="text-sm text-gray-500">Yesterday</div>
-
-          <Card className="border-none bg-zinc-900">
-            <div className="flex items-center gap-3 p-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage
-                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2501.PNG-8T9LUfrP9ZQahOtZeCUZYcrDm9q1Ch.png"}`}
-                  alt="Profile"
-                />
-                <AvatarFallback>AC</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="font-medium">
-                  10o dia, nunca malhei tanto tempo...
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback>AC</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-400">Adran Carnavale</span>
-                </div>
-              </div>
-              <span className="text-sm text-gray-500">8:05 pm</span>
-            </div>
-          </Card>
-
-          {/* More cards following the same pattern... */}
+            </Fragment>
+          ))}
 
           {/* Floating Action Button */}
           <Button
@@ -108,7 +100,6 @@ export default function Timeline() {
           >
             <Plus className="h-6 w-6" />
           </Button>
-
           {/* Bottom Navigation */}
           <div className="fixed bottom-0 left-0 right-0 flex h-16 items-center justify-around border-t border-zinc-800 bg-zinc-900">
             <Button

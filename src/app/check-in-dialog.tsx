@@ -8,34 +8,67 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import { useCheckInDialogStore } from "./check-in-dialog-root"
-import { genUploader } from "uploadthing/client";
-import type { OurFileRouter } from "@/app/api/uploadthing/core";
-import { base64ToFile } from "@/lib/uploadthing"
+import { base64ToFile, useUploadThing } from "@/lib/uploadthing"
+import { useUserCheckInMutation } from "@/lib/firebase"
+import { useAuth } from "@clerk/nextjs"
+import {nanoid} from "nanoid"
 
-export const { uploadFiles } = genUploader<OurFileRouter>({
-  package: "@uploadthing/react",
-});
+// export const { uploadFiles } = genUploader<OurFileRouter>({
+//   package: "@uploadthing/react",
+// });
 
 export function CheckInDialog() {
   const {
-    imageSrc
+    imageSrc,
+    close
   } = useCheckInDialogStore()
+  const {
+    userId
+  } = useAuth()
+  const uploadThing = useUploadThing((routeRegistry) => routeRegistry.imageUploader, {
+    onUploadError(e) {
+      console.error("Upload error", e)
+    },
+    async onClientUploadComplete(res) {
+      const fileURL = res[0]?.serverData.imageSrc
+
+      if (!fileURL) {
+        throw new Error("File URL not found")
+      }
+
+      if (!userId) { 
+        throw new Error("User not found")
+      }
+
+      await userCheckInMutation.mutateAsync({
+        imageSrc: fileURL,
+        userId,
+      })
+
+      close()
+    },
+  })
+
+
+  const userCheckInMutation = useUserCheckInMutation()
 
   const handlePost = async () => {
-    if (!imageSrc) {
-      return;
+    if (!userId) { 
+      throw new Error("User not found")
     }
-    const file = base64ToFile(imageSrc, "dastw")
+    if (!imageSrc) {
+      throw new Error("Image not found")
+    }
+    const file = base64ToFile(imageSrc, nanoid())
     if (!file) {
       return;
     }
-    console.log({imageSrc})
-    const response = await uploadFiles("imageUploader", {
-      files: [
-        file,
-      ],
-    });
-    console.log({response})
+    
+    const response = await uploadThing.startUpload([file]);
+
+    if (!response) {
+      throw new Error("Upload failed")
+    }
   }
   return (
     <div className="fixed inset-0 bg-black text-white min-h-screen">

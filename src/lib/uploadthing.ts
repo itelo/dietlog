@@ -1,4 +1,5 @@
 import {
+  generateReactHelpers,
   generateUploadButton,
   generateUploadDropzone,
 } from "@uploadthing/react";
@@ -6,6 +7,7 @@ import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
 export const UploadButton = generateUploadButton<OurFileRouter>();
 export const UploadDropzone = generateUploadDropzone<OurFileRouter>();
+export const { useUploadThing, uploadFiles } = generateReactHelpers<OurFileRouter>();
 
 export function base64ToFile(base64String: string, fileName: string): File | null {
   // Ensure the base64 string is valid

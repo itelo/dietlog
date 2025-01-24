@@ -19,24 +19,31 @@ export const ourFileRouter = {
     },
   })
     // Set permissions and file types for this FileRoute
-    // .middleware(async ({ req }) => {
-    //   // This code runs on your server before upload
-    //   // const user = await auth(req);
+    .middleware(async ({ req }) => {
+      // This code runs on your server before upload
+      // const user = await auth(req);
 
-    //   // If you throw, the user will not be able to upload
-    //   // if (!user) throw new UploadThingError("Unauthorized");
+      // If you throw, the user will not be able to upload
+      // if (!user) throw new UploadThingError("Unauthorized");
 
-    //   // Whatever is returned here is accessible in onUploadComplete as `metadata`
-    //   return { userId: user.id };
-    // })
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      console.log("Middleware ran",);
+      return {  };
+    })
+    .onUploadError(async ({ error }) => {
+      // This code runs on your server if there is an error
+      console.error("Upload error", error)
+    })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
-      // console.log("Upload complete for userId:", metadata.userId);
+      console.log("Upload complete for userId:", file.name);
 
       console.log("file url", file.url);
 
       // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return {  };
+      return { 
+        imageSrc: file.url
+       };
     }),
 } satisfies FileRouter;
 
