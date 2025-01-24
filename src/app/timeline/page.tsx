@@ -5,38 +5,32 @@ import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { Dialog, DialogContent, DialogOverlay, DialogPortal, DialogTrigger } from "@/components/ui/dialog"
+import { CheckInDialog } from "./check-in-dialog"
+import Webcam from "react-webcam";
+import { CameraInterface } from "./camera"
+import { useCheckInDialogStore } from "./check-in-dialog-root"
+
 
 export default function Timeline() {
+  const { state, open, close } = useCheckInDialogStore()
   return (
     <div className="bg-black min-h-screen text-white">
-      {/* Status Bar */}
-      <div className="flex justify-between items-center px-4 py-2">
-        <span className="text-lg font-medium">10:01</span>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4">
-            <svg viewBox="0 0 24 24" className="fill-current">
-              <path d="M12 3C7.58 3 4 6.58 4 11v4.17l-2 2V19h20v-1.83l-2-2V11c0-4.42-3.58-8-8-8zm0 14c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z" />
-            </svg>
-          </div>
-          <div className="w-4 h-4">
-            <svg viewBox="0 0 24 24" className="fill-current">
-              <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" />
-            </svg>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-6 h-3 rounded-sm border border-white"></div>
-            <span className="text-xs">80%</span>
-          </div>
-        </div>
-      </div>
 
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-2">
-        <Button variant="ghost" size="icon">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-          </svg>
-        </Button>
+            <Button variant="ghost" size="icon">
+              <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+              </svg>
+            </Button>
+        <Dialog open={state !== null} onOpenChange={() => close()}>
+          <DialogContent className="min-h-dvh min-w-dvw p-0 m-0 max-w-[100dvw] border-none">
+            {state === "taking-photo" && <CameraInterface />}
+            {state === "confirming" && <CheckInDialog />}
+          </DialogContent>
+        </Dialog>
         <div className="flex items-center gap-4">
           <Bell className="w-6 h-6" />
           <MoreVertical className="w-6 h-6" />
@@ -118,7 +112,7 @@ export default function Timeline() {
         {/* More cards following the same pattern... */}
 
         {/* Floating Action Button */}
-        <Button className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-red-500 hover:bg-red-600" size="icon">
+        <Button className="fixed bottom-20 right-4 h-14 w-14 rounded-full bg-red-500 hover:bg-red-600" size="icon" onClick={open}>
           <Plus className="h-6 w-6" />
         </Button>
 
