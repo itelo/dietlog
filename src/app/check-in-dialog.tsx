@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Camera } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Image from "next/image"
 import { useCheckInDialogStore } from "./check-in-dialog-root"
 import { base64ToFile, useUploadThing } from "@/lib/uploadthing"
-import { useUserCheckInMutation } from "@/lib/firebase"
 import { useAuth } from "@clerk/nextjs"
 import {nanoid} from "nanoid"
+import { api } from "@/trpc/react"
 
 // export const { uploadFiles } = genUploader<OurFileRouter>({
 //   package: "@uploadthing/react",
@@ -25,6 +25,13 @@ export function CheckInDialog() {
   const {
     userId
   } = useAuth()
+  const apiUtils = api.useUtils()
+  const postCreateMutation = api.post.create.useMutation({
+    async onSuccess() {
+      await apiUtils.post.list.invalidate()
+      close()
+    }
+  })
   const uploadThing = useUploadThing((routeRegistry) => routeRegistry.imageUploader, {
     onUploadError(e) {
       console.error("Upload error", e)
@@ -40,17 +47,13 @@ export function CheckInDialog() {
         throw new Error("User not found")
       }
 
-      await userCheckInMutation.mutateAsync({
-        imageSrc: fileURL,
-        userId,
+      await postCreateMutation.mutateAsync({
+        imageURL: fileURL,
+        mealCycleVariant: "breakfast",
+        timestamp: new Date().toISOString(),
       })
-
-      close()
     },
   })
-
-
-  const userCheckInMutation = useUserCheckInMutation()
 
   const handlePost = async () => {
     if (!userId) { 

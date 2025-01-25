@@ -8,29 +8,22 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckInDialog } from "@/app/check-in-dialog";
 import { CameraInterface } from "@/app/camera";
 import { useCheckInDialogStore } from "@/app/check-in-dialog-root";
-import { useAuth, UserButton } from "@clerk/nextjs";
-import {
-  checkInConverter,
-  firebaseDb,
-  useUserCheckInsSubscription,
-} from "@/lib/firebase";
-import { doc } from "firebase/firestore";
-import { Fragment, useMemo } from "react";
+import { UserButton } from "@clerk/nextjs";
+import { Fragment } from "react";
 import * as D from "date-fns";
 import * as R from "remeda";
+import { api } from "@/trpc/react";
 
 export default function Timeline() {
   const { state, open, close } = useCheckInDialogStore();
-  const { userId } = useAuth();
 
-  const checkInsQuery = useUserCheckInsSubscription({
-    userId,
-  });
+  const {
+    data: posts
+  } = api.post.list.useQuery();
 
   const groups = R.pipe(
-    checkInsQuery.data ?? [],
-    R.map((d) => R.addProp(d, "timestamp_date", new Date())),
-    R.sortBy([R.prop("timestamp_date"), "desc"]),
+    posts ?? [],
+    R.sortBy([R.prop("timestamp"), "desc"]),
     R.groupBy((d) => D.format(d.timestamp, "yyyy-MM-dd")),
   );
 
@@ -54,7 +47,7 @@ export default function Timeline() {
 
         {/* Content */}
         <div className="space-y-4 px-4 py-2">
-          {Object.entries(groups).map(([date, checkIns]) => (
+          {Object.entries(groups).map(([date, groupedPosts]) => (
             <Fragment key={date}>
               <div className="text-sm text-gray-500">
                 {D.format(
@@ -63,12 +56,12 @@ export default function Timeline() {
                 )}
               </div>
               <div className="w-full flex flex-col gap-2">
-              {checkIns.map((c) => (
-                <Card className="border-none bg-zinc-900" key={c.id}>
+              {groupedPosts.map((c) => (
+                <Card className="border-none bg-zinc-900" key={c.postId}>
                   <div className="flex items-center gap-3 p-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage
-                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? c.imageSrc}`}
+                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? c.imageURL}`}
                         alt="Spinning class"
                       />
                       <AvatarFallback>SP</AvatarFallback>

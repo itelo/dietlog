@@ -10,6 +10,7 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "test", "production"]),
     UPLOADTHING_TOKEN: z.string(),
     CLERK_SECRET_KEY: z.string(),
+    DATABASE_URL: z.string().url(),
   },
 
   /**
@@ -47,6 +48,7 @@ export const env = createEnv({
    * middlewares) or client-side so we need to destruct manually.
    */
   runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_FIREBASE_CONFIG: process.env.NEXT_PUBLIC_FIREBASE_CONFIG,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
