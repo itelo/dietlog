@@ -12,10 +12,35 @@ import { base64ToFile, useUploadThing } from "@/lib/uploadthing"
 import { useAuth } from "@clerk/nextjs"
 import {nanoid} from "nanoid"
 import { api } from "@/trpc/react"
+import { useState } from "react"
 
-// export const { uploadFiles } = genUploader<OurFileRouter>({
-//   package: "@uploadthing/react",
-// });
+const mealCycleVariants = [{
+  value: "breakfast",
+  label: "Café da manhã",
+}, {
+  value: "lunch",
+  label: "Almoço",
+}, {
+  value: "dinner",
+  label: "Jantar",
+}, {
+  value: "afternoon-snack",
+  label: "Lanche da tarde",
+}, {
+  value: "evening-snack",
+  label: "Lanche da noite",
+}, {
+  value: "morning-snack",
+  label: "Late da manhã",
+}, {
+  value: "supper",
+  label: "Ceia",
+}, {
+  value: "other",
+  label: "Other",
+}] as const
+
+type MealCycleVariant = (typeof mealCycleVariants)[number]['value']
 
 export function CheckInDialog() {
   const {
@@ -25,6 +50,7 @@ export function CheckInDialog() {
   const {
     userId
   } = useAuth()
+  const [mealCycleVariant, setMealCycleVariant] = useState<MealCycleVariant | undefined>(undefined)
   const apiUtils = api.useUtils()
   const postCreateMutation = api.post.create.useMutation({
     async onSuccess() {
@@ -47,9 +73,13 @@ export function CheckInDialog() {
         throw new Error("User not found")
       }
 
+      if (!mealCycleVariant) {
+        throw new Error("Meal cycle variant not found")
+      }
+
       await postCreateMutation.mutateAsync({
         imageURL: fileURL,
-        mealCycleVariant: "breakfast",
+        mealCycleVariant,
         timestamp: new Date().toISOString(),
       })
     },
@@ -88,61 +118,22 @@ export function CheckInDialog() {
         </Button>
       </header>
 
-      {/* Content */}
-      <div className="p-4 space-y-6">
-        <div className="space-y-2">
-          <Input type="text" placeholder="What did you eat?" className="bg-gray-800 border-gray-700" />
-          <Textarea
-            placeholder="Add notes about your meal (optional)"
-            className="bg-gray-800 border-gray-700 min-h-[100px]"
-          />
-        </div>
 
-        {imageSrc && <div className="space-y-4 bg-gray-800 rounded-lg p-4">
-          <div className="flex items-center gap-4">
-            <Image src={imageSrc} alt="food uploaded" width={80} height={80} className="h-20 w-20 bg-gray-700 rounded-lg flex items-center justify-center" />
-          </div>
-        </div>}
+        {imageSrc && <div className="w-full flex flex-row justify-start items-start p-4 gap-2">
+            <Image src={imageSrc} alt="food uploaded" width={128} height={128} className="size-32 min-h-32 min-w-32 rounded-lg object-center" />
 
-        <div className="space-y-4">
-          <div>
-            <Label className="text-gray-400">Diet Type</Label>
-            <Select>
+          <div className="w-full">
+            <Label className="text-gray-400">Refeição</Label>
+            <Select value={mealCycleVariant} onValueChange={v => setMealCycleVariant(v as MealCycleVariant)}>
               <SelectTrigger className="bg-gray-800 border-gray-700">
                 <SelectValue placeholder="Select diet type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="keto">Keto</SelectItem>
-                <SelectItem value="vegan">Vegan</SelectItem>
-                <SelectItem value="vegetarian">Vegetarian</SelectItem>
-                <SelectItem value="paleo">Paleo</SelectItem>
-                <SelectItem value="mediterranean">Mediterranean</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {mealCycleVariants.map(mcv => <SelectItem key={mcv.value} value={mcv.value}>{mcv.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-4 bg-gray-800 rounded-lg p-4">
-            <div className="space-y-2">
-              <Label className="text-gray-400">Nutritional Info</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Input type="number" placeholder="Calories" className="bg-gray-700 border-gray-600" />
-                </div>
-                <div>
-                  <Input type="number" placeholder="Protein (g)" className="bg-gray-700 border-gray-600" />
-                </div>
-                <div>
-                  <Input type="number" placeholder="Carbs (g)" className="bg-gray-700 border-gray-600" />
-                </div>
-                <div>
-                  <Input type="number" placeholder="Fat (g)" className="bg-gray-700 border-gray-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        </div>}
     </div>
   )
 }

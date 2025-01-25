@@ -17,9 +17,7 @@ import { api } from "@/trpc/react";
 export default function Timeline() {
   const { state, open, close } = useCheckInDialogStore();
 
-  const {
-    data: posts
-  } = api.post.list.useQuery();
+  const { data: posts } = api.post.list.useQuery();
 
   const groups = R.pipe(
     posts ?? [],
@@ -32,13 +30,15 @@ export default function Timeline() {
       <div className="min-h-screen bg-black text-white">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2">
-          <UserButton appearance={{
-            elements: {
-              // button: "size-12",
-              // userButtonBox: "size-12",
-              avatarBox: "size-10",
-            }
-          }} />
+          <UserButton
+            appearance={{
+              elements: {
+                // button: "size-12",
+                // userButtonBox: "size-12",
+                avatarBox: "size-10",
+              },
+            }}
+          />
           <div className="flex items-center gap-4">
             <Bell className="h-6 w-6" />
             <MoreVertical className="h-6 w-6" />
@@ -55,32 +55,31 @@ export default function Timeline() {
                   "EEEE, MMMM d",
                 )}
               </div>
-              <div className="w-full flex flex-col gap-2">
-              {groupedPosts.map((c) => (
-                <Card className="border-none bg-zinc-900" key={c.postId}>
-                  <div className="flex items-center gap-3 p-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage
-                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? c.imageURL}`}
-                        alt="Spinning class"
-                      />
-                      <AvatarFallback>SP</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-medium">Spinning</h3>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback>AI</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-gray-400">Ana Julia</span>
+              <div className="flex w-full flex-col gap-2">
+                {groupedPosts.map((c) => (
+                  <Card className="border-none bg-zinc-900" key={c.postId}>
+                    <div className="flex items-center gap-3 p-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage
+                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL ?? c.imageURL}`}
+                          alt="Spinning class"
+                        />
+                        <AvatarFallback>SP</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-medium">Spinning</h3>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-lg bg-accent px-2 py-1 text-sm text-accent-foreground">
+                            {c.mealCycleVariant}
+                          </span>
+                        </div>
                       </div>
+                      <span className="text-sm text-gray-500">
+                        {D.format(c.timestamp, "HH:mm")}
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-500">
-                      {D.format(c.timestamp, "HH:mm")}
-                    </span>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
               </div>
             </Fragment>
           ))}
