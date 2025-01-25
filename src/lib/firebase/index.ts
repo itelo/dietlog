@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
 import { env } from "@/env";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, browserLocalPersistence } from 'firebase/auth'
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 export * from "./firestore/check-in"
@@ -17,3 +18,6 @@ export const firebaseApp = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const firebaseDb = getFirestore(firebaseApp);
+
+// Connect to Firebase auth
+export const firebaseAuth = getAuth(firebaseApp)

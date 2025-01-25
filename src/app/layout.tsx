@@ -6,6 +6,7 @@ import { type Metadata } from "next";
 import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { FirebaseAuthProvider } from "@/lib/firebase/firebase-provider";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -24,7 +25,12 @@ export default function RootLayout({
     >
       <html lang="en" className={`${GeistSans.variable}`}>
         <body>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <FirebaseAuthProvider>
+            {children
+            }
+            </FirebaseAuthProvider>
+            </TRPCReactProvider>
         </body>
       </html>
     </ClerkProvider>
